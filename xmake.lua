@@ -1,34 +1,40 @@
 add_rules("mode.debug", "mode.release")
 set_languages("c17", "c++17")
 
-add_requires("opencv") -- , "libsdl"
+add_requires("opencv" , "libsdl")
 
--- target("imgui")
---     set_kind("static")
+target("imgui")
+    set_kind("static")
 
---     if is_mode("debug") then 
---         add_defines("MY_DEBUG")
---     end
+    if is_mode("debug") then 
+        add_defines("MY_DEBUG")
+    end
 
---     add_includedirs("third_party/imgui", "third_party/imgui/backends")
---     add_files("third_party/imgui/*.cpp")
+    add_includedirs("third_party/imgui", "third_party/imgui/backends")
+    add_files("third_party/imgui/*.cpp")
 
---     add_files("third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp", "third_party/imgui/backends/imgui_impl_sdl2.cpp")
---     add_packages("libsdl")
+    add_files("third_party/imgui/backends/imgui_impl_sdlrenderer2.cpp", "third_party/imgui/backends/imgui_impl_sdl2.cpp")
+    add_packages("libsdl")
 
-target("minditor")
+target("img2stl")
     set_kind("binary")
 
-    add_packages("opencv") -- , "libsdl"
-    -- add_deps("imgui")
+    add_packages("opencv", "libsdl")
+    add_deps("imgui")
 
     add_includedirs("src")
+    add_includedirs("third_party", "third_party/imgui", "third_party/imgui/backends")
 
     add_files("src/**.cpp")
 
     if is_mode("debug") then 
         add_defines("MY_DEBUG")
     end
+
+    after_build(function (target)
+                    os.cp("$(projectdir)/res/*", target:targetdir())
+                end
+    )
 
 --
 -- If you want to known more usage about xmake, please see https://xmake.io

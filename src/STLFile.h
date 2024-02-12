@@ -1,73 +1,66 @@
 #ifndef IMG2STL_STLFILE_H_
 #define IMG2STL_STLFILE_H_
 
-#include <cstdint>
-#include <string>
-#include <vector>
+// #include <cstdint>
+// #include <string>
+// #include <vector>
 
-#include "wx/file.h"
-#include "wx/filename.h"
-#include "wx/string.h"
+// struct __attribute__((packed)) stl_bin {
+//     uint8_t hdr[80];
+//     uint32_t tri_cnt;
+//     Polygon3<float> pgs[];
 
-#include "Geometry.h"
+//     static void *operator new(std::size_t sz, uint32_t cnt) {
+//         return ::operator new(sz + sizeof(Polygon3<float>) * cnt);
+//     }
 
+//     static void operator delete(void* ptr, std::size_t sz) {
+//         ::operator delete(ptr);
+//     }
+// };
 
-struct __attribute__((packed)) stl_bin {
-    uint8_t hdr[80];
-    uint32_t tri_cnt;
-    Polygon3<float> pgs[];
+// class STLFile {
+// public:
+//     enum file_type {
+//         ASCII = 0,
+//         BIN
+//     };
 
-    static void *operator new(std::size_t sz, uint32_t cnt) {
-        return ::operator new(sz + sizeof(Polygon3<float>) * cnt);
-    }
+//     explicit STLFile(const char *t_name = "");
+//     ~STLFile() { m_polygons_list.clear(); };
 
-    static void operator delete(void* ptr, std::size_t sz) {
-        ::operator delete(ptr);
-    }
-};
+//     void add_triangle(const Polygon3<float> &t_polygon);
+//     void add_stl(const STLFile &t_stl);
 
-class STLFile {
-public:
-    enum file_type {
-        ASCII = 0,
-        BIN
-    };
+//     void add(const Polygon3<float> &t_polygon) { add_triangle(t_polygon); }
+//     void add(const STLFile &t_stl) { add_stl(t_stl); }
 
-    explicit STLFile(const char *t_name = "");
-    ~STLFile() { m_polygons_list.clear(); };
+//     STLFile &operator+=(const Polygon3<float> &t_polygon) {
+//         add_triangle(t_polygon);
+//         return *this;
+//     }
 
-    void add_triangle(const Polygon3<float> &t_polygon);
-    void add_stl(const STLFile &t_stl);
+//     STLFile &operator+=(const STLFile &t_stl) {
+//         add_stl(t_stl);
+//         return *this;
+//     }
 
-    void add(const Polygon3<float> &t_polygon) { add_triangle(t_polygon); }
-    void add(const STLFile &t_stl) { add_stl(t_stl); }
+//     void clear() { m_polygons_list.clear(); }
 
-    STLFile &operator+=(const Polygon3<float> &t_polygon) {
-        add_triangle(t_polygon);
-        return *this;
-    }
+//     void to_ascii(wxString &result);
+//     void to_bin(stl_bin **t_result, std::size_t &t_size);
 
-    STLFile &operator+=(const STLFile &t_stl) {
-        add_stl(t_stl);
-        return *this;
-    }
+//     [[nodiscard]] std::size_t polygons() const { return m_polygons_list.size(); }
 
-    void clear() { m_polygons_list.clear(); }
+//     void set_header(const wxString &str);
 
-    void to_ascii(wxString &result);
-    void to_bin(stl_bin **t_result, std::size_t &t_size);
+//     void save_file(file_type f_type, const wxFileName &filename);
 
-    [[nodiscard]] std::size_t polygons() const { return m_polygons_list.size(); }
+// private:
+//     std::string m_name; // name (for ASCII; without whitespaces) or header (for BIN; <= 80 symbols)
+//     std::vector<Polygon3<float>> m_polygons_list;
 
-    void set_header(const wxString &str);
-
-    void save_file(file_type f_type, const wxFileName &filename);
-
-private:
-    std::string m_name; // name (for ASCII; without whitespaces) or header (for BIN; <= 80 symbols)
-    std::vector<Polygon3<float>> m_polygons_list;
-
-};
+// };
 
 
 #endif //   IMG2STL_STLFILE_H_
