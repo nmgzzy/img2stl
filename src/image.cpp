@@ -4,12 +4,13 @@
 
 static bool reverse = false;
 static int blur_core_size = 1;
-// static float blur_sigma = 10;
 static int size_xy[2] = {0};
 static float brightness = 0;
 static float contrast = 0;
 static bool round_frame = false;
 static int frame_width[2] = {0};
+static float thickness[2] = {1, 5};
+
 
 Mat image_src;
 Mat image_show;
@@ -51,35 +52,33 @@ bool LoadTextureFromMat(Mat mat, SDL_Texture **texture_ptr)
     return true;
 }
 
-Mat Blur(Mat src)
+void Blur(Mat &src)
 {
     SDL_Log("Blur");
-    Mat dst;
     int ksize = blur_core_size * 2 - 1;
-    cv::GaussianBlur(src, dst, cv::Size(ksize, ksize), 0.0);
-    return dst;
+    cv::GaussianBlur(src, src, cv::Size(ksize, ksize), 0.0);
 }
 
-Mat Resize(Mat src)
+void Resize(Mat &src)
 {
     SDL_Log("Resize");
-    Mat dst;
-    cv::resize(src, dst, cv::Size(size_xy[0], size_xy[1]), 0.0, 0.0, cv::INTER_AREA);
-    return dst;
+    cv::resize(src, src, cv::Size(size_xy[0], size_xy[1]), 0.0, 0.0, cv::INTER_AREA);
 }
 
-Mat AddFrame(Mat src)
+void AddFrame(Mat &src)
 {
     SDL_Log("AddFrame");
-    Mat dst = src; // todo
+    if (round_frame)
+    {
 
-    return dst;
+    }
+
+
 }
 
-Mat SetBrightnessAndContrast(Mat src)
+void SetBrightnessAndContrast(Mat &src)
 {
     SDL_Log("SetBrightness");
-    Mat dst;
     float alpha = 0;
     if (contrast > 0)
     {
@@ -90,8 +89,7 @@ Mat SetBrightnessAndContrast(Mat src)
         alpha = 1.0 + contrast;
     }
     float beta = (brightness - contrast) * 127;
-    src.convertTo(dst, -1, alpha, beta);
-    return dst;
+    src.convertTo(src, -1, alpha, beta);
 }
 
 void ClearVar(int width, int height)
@@ -106,6 +104,8 @@ void ClearVar(int width, int height)
     round_frame = false;
     frame_width[0] = 0;
     frame_width[1] = 0;
+    thickness[0] = 1;
+    thickness[1] = 5;
 }
 
 void ImageWindow(bool refresh)
@@ -116,19 +116,20 @@ void ImageWindow(bool refresh)
     if (refresh && !image_src.empty())
     {
         SDL_Log("ImageWindow, refresh------------------");
-        Mat temp = image_src;
+        Mat temp;
+        image_src.copyTo(temp);
         if (fabs(brightness) >= 0.001)
-            temp = SetBrightnessAndContrast(temp);
+            SetBrightnessAndContrast(temp);
         if (fabs(contrast) >= 0.001)
-            temp = SetBrightnessAndContrast(temp);
+            SetBrightnessAndContrast(temp);
         if (blur_core_size > 1)
-            temp = Blur(temp);
+            Blur(temp);
         if (size_xy[0] > 0 && size_xy[1] > 0 &&
             (size_xy[0] != image_src.size[1] || size_xy[1] != image_src.size[0]))
-            temp = Resize(temp);
+            Resize(temp);
         if (round_frame || frame_width[0] > 0 || frame_width[1] > 0)
-            temp = AddFrame(temp);
-        image_show = temp;
+            AddFrame(temp);
+        temp.copyTo(image_show);
 
         bool ret = LoadTextureFromMat(image_show, &my_texture);
     }
@@ -151,22 +152,27 @@ bool SettingWindow()
 
     ImGui::Button("Open", ImVec2(-1, 50));
 
-    ImGui::SeparatorText("Common");
+    ImGui::SeparatorText("Image");
     refresh |= ImGui::Checkbox("Reverse Image", &reverse);
     refresh |= ImGui::DragInt2("Image Size", size_xy, 2.0f, 1, 4000);
     refresh |= ImGui::SliderFloat("Brightness", &brightness, -1, 1);
     refresh |= ImGui::SliderFloat("Contrast", &contrast, -1, 1);
-
-    ImGui::SeparatorText("Blur");
     refresh |= ImGui::DragInt("Blur Core Size", &blur_core_size, 0.2f, 1, 100);
-    // refresh |= ImGui::DragFloat("Blur Sigma", &blur_sigma, 1.0f, 1, 100);
 
     ImGui::SeparatorText("Frame");
     refresh |= ImGui::Checkbox("Round", &round_frame);
     refresh |= ImGui::DragInt2("Frame Width", frame_width, 0.5f, 0, 1000);
 
+    ImGui::SeparatorText("3D Model");
+    ImGui::DragFloat("Min Thickness", &thickness[0], 0.2f, 0.1, thickness[1]);
+    ImGui::DragFloat("Max Thickness", &thickness[1], 0.2f, thickness[0], 100);
+    //width height
+
     ImGui::NewLine();
-    ImGui::Button("Generate", ImVec2(-1, 50));
+    if (ImGui::Button("Generate", ImVec2(-1, 50)))
+    {
+        SDL_Log("Generate");
+    }
 
     ImGui::End();
     return refresh;

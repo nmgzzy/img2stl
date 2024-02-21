@@ -84,7 +84,10 @@ int main(int, char **)
             {
                 SDL_Log("drop file: %s", event.drop.file);
                 image_src = cv::imread(event.drop.file, cv::IMREAD_COLOR);
-                cv::cvtColor(image_src, image_src, cv::COLOR_BGR2RGB);
+                cv::cvtColor(image_src, image_src, cv::COLOR_BGR2GRAY);
+                cv::cvtColor(image_src, image_src, cv::COLOR_GRAY2RGB);
+                // cv::cvtColor(image_src, image_src, cv::COLOR_BGR2RGB);
+
                 while (MAX(image_src.size[0], image_src.size[1]) > 4000)
                 {
                     cv::resize(image_src, image_src, cv::Size(), 0.8, 0.8, cv::INTER_AREA);

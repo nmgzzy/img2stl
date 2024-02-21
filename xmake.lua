@@ -1,7 +1,7 @@
 add_rules("mode.debug", "mode.release")
 set_languages("c17", "c++17")
 
-add_requires("opencv" , "libsdl")
+add_requires("opencv" , "libsdl", "eigen")
 
 target("imgui")
     set_kind("static")
@@ -19,7 +19,7 @@ target("imgui")
 target("img2stl")
     set_kind("binary")
 
-    add_packages("opencv", "libsdl")
+    add_packages("opencv", "libsdl", "eigen")
     add_deps("imgui")
 
     add_includedirs("src")

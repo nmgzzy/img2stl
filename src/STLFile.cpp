@@ -1,84 +1,128 @@
 #include "STLFile.h"
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
+Triangle::Triangle(Eigen::Vector3f _points[], Eigen::Vector3f _norm)
+{
+    points[0] = _points[0];
+    points[1] = _points[1];
+    points[2] = _points[2];
+    norm = _norm;
+}
 
-// STLFile::STLFile(const char *t_name) : m_name(t_name) {
-//     if (m_name.length() > 80)
-//         m_name.resize(80);
-// }
+Triangle::Triangle(Eigen::Vector3f _points[], bool _norm_dir)
+{
+    using Eigen::Vector3f;
+    points[0] = _points[0];
+    points[1] = _points[1];
+    points[2] = _points[2];
+    Vector3f a = points[2] - points[1];
+    Vector3f b = points[0] - points[1];
+    if (_norm_dir)
+    {
+        norm = a.cross(b);
+    }
+    else
+    {
+        norm = b.cross(a);
+    }
+    norm.normalize();
+}
 
-// void STLFile::add_triangle(const Polygon3<float> &t_polygon) {
-//     m_polygons_list.push_back(t_polygon);
-// }
+Triangle::Triangle(Triangle & tri)
+{
+    points[0] = tri.points[0];
+    points[1] = tri.points[1];
+    points[2] = tri.points[2];
+    norm = tri.norm;
+}
 
-// void STLFile::add_stl(const STLFile &t_stl) {
-//     std::size_t start_sz = polygons();
-//     std::size_t sz = t_stl.polygons();
-//     m_polygons_list.resize(start_sz + sz);
-//     for (std::size_t i = 0; i < sz; ++i)
-//         m_polygons_list.at(start_sz + i) = t_stl.m_polygons_list.at(i);
-// }
+void Triangle::Print()
+{
+    std::cout << "Tri:\n"
+              << std::endl;
+    std::cout << norm << std::endl;
+    std::cout << points[0] << std::endl;
+    std::cout << points[1] << std::endl;
+    std::cout << points[2] << std::endl;
+}
 
-// void STLFile::to_ascii(wxString &result) {
-//     for (auto &c : m_name)
-//         if (c == ' ' or c == '\n' or c == '\t')
-//             c = '_';
-//     result.append(wxString::Format("solid %s\n", m_name));
+STLFile::STLFile(const char *t_name) : m_name(t_name)
+{
+    if (m_name.length() > 80)
+        m_name.resize(80);
+}
 
-//     for (auto &pg : m_polygons_list) {
-//         result.append(wxString::Format(" facet normal %e %e %e\n", pg.nrm.x, pg.nrm.y, pg.nrm.z));
-//         result.append("  outer loop\n");
-//         result.append(wxString::Format("   vertex %e %e %e\n", pg.vx_1.x, pg.vx_1.y, pg.vx_1.z));
-//         result.append(wxString::Format("   vertex %e %e %e\n", pg.vx_2.x, pg.vx_2.y, pg.vx_2.z));
-//         result.append(wxString::Format("   vertex %e %e %e\n", pg.vx_3.x, pg.vx_3.y, pg.vx_3.z));
-//         result.append("  endloop\n endfacet\n");
-//     }
+void STLFile::add_triangle(const Triangle &t_polygon)
+{
+    m_triangle_list.emplace_back(t_polygon);
+}
 
-//     result.append(wxString::Format("endsolid %s", m_name));
-// }
+void STLFile::add_stl(const STLFile &t_stl)
+{
+    std::size_t start_sz = count();
+    std::size_t sz = t_stl.count();
+    m_triangle_list.resize(start_sz + sz);
+    for (std::size_t i = 0; i < sz; ++i)
+        m_triangle_list.at(start_sz + i) = t_stl.m_triangle_list.at(i);
+}
 
-// void STLFile::to_bin(stl_bin **t_result, std::size_t &t_size) {
-//     if (m_name.size() != 80)
-//         m_name.resize(80, '\0');
+void STLFile::to_ascii(string &result)
+{
+    std::stringstream ss;
+    for (auto &c : m_name)
+        if (c == ' ' or c == '\n' or c == '\t')
+            c = '_';
 
-//     uint32_t tri_cnt = m_polygons_list.size();
-//     t_size = sizeof(stl_bin) + sizeof(Polygon3<float>) * tri_cnt;
+    ss << "solid " << m_name << "\n";
 
-//     auto *result = new(tri_cnt) stl_bin;
+    for (auto &tri : m_triangle_list)
+    {
+        ss << " facet normal " << tri.norm[0] << " " << tri.norm[1] << " " << tri.norm[2] << "\n";
+        ss << "  outer loop\n";
+        ss << "   vertex " << tri.points[0][0] << " " << tri.points[0][1] << " " << tri.points[0][2] << "\n";
+        ss << "   vertex " << tri.points[1][0] << " " << tri.points[1][1] << " " << tri.points[1][2] << "\n";
+        ss << "   vertex " << tri.points[2][0] << " " << tri.points[2][1] << " " << tri.points[2][2] << "\n";
+        ss << "  endloop\n endfacet\n";
+    }
 
-//     m_name.copy(reinterpret_cast<char *>(result->hdr), 80);
-//     result->tri_cnt = tri_cnt;
+    ss << "endsolid " << m_name;
 
-//     for (uint32_t i = 0; i < tri_cnt; ++i)
-//         result->pgs[i] = m_polygons_list[i];
+    result = ss.str();
+}
 
-//     *t_result = result;
-// }
+void STLFile::set_header(const string &str)
+{
+    m_name = str;
+    m_name.resize(80, '\0');
+}
 
-// void STLFile::set_header(const wxString &str) {
-//     m_name = str;
-//     m_name.resize(80, '\0');
-// }
+void STLFile::save_file(STLFile::file_type f_type, const string &filename)
+{
+    using namespace std;
 
-// void STLFile::save_file(STLFile::file_type f_type, const wxFileName &filename) {
-//     wxFile file(filename.GetFullPath(), wxFile::write);
+    if (f_type == STLFile::ASCII)
+    {
+        ofstream file(filename.c_str());
+        string result;
+        to_ascii(result);
+        file.write(result.c_str(), result.size());
+        file.close();
+    }
+    else if (f_type == STLFile::BIN)
+    {
+        ofstream file(filename.c_str(), ios::binary);
 
-//     if (!file.IsOpened()) {
-//         wxLogError(wxString::Format("Cannot open file %s to write!", filename.GetFullPath()));
-//         return;
-//     }
+        file.write(m_name.c_str(), 80);
+        uint32_t size = m_triangle_list.size();
+        file.write((char *)(&size), 4);
+        for (uint32_t i = 0; i < size; i++)
+        {
+            /* code */
+        }
+        
 
-//     if (f_type == STLFile::ASCII) {
-//         wxString result;
-//         to_ascii(result);
-//         file.Write(result);
-//     } else if (f_type == STLFile::BIN) {
-//         stl_bin *result = nullptr;
-//         std::size_t sz;
-//         to_bin(&result, sz);
-//         file.Write(result, sz);
-//         delete result;
-//     }
-
-//     file.Close();
-//     wxLogInfo(wxString::Format("File %s created.", filename.GetFullName()));
-// }
+        file.close();
+    }
+}
