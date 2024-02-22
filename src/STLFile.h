@@ -6,7 +6,8 @@
 #include <vector>
 #include "common.h"
 
-struct __attribute__((packed)) Triangle
+#pragma pack(1)
+struct Triangle
 {
     Eigen::Vector3f norm;
     Eigen::Vector3f points[3];
@@ -18,6 +19,7 @@ struct __attribute__((packed)) Triangle
 
     void Print();
 };
+#pragma pack()
 
 class STLFile
 {

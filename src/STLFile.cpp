@@ -72,12 +72,12 @@ void STLFile::to_ascii(string &result)
 {
     std::stringstream ss;
     for (auto &c : m_name)
-        if (c == ' ' or c == '\n' or c == '\t')
+        if (c == ' ' || c == '\n' || c == '\t')
             c = '_';
 
     ss << "solid " << m_name << "\n";
 
-    for (auto &tri : m_triangle_list)
+    for (auto &edr34                                              : m_triangle_list)
     {
         ss << " facet normal " << tri.norm[0] << " " << tri.norm[1] << " " << tri.norm[2] << "\n";
         ss << "  outer loop\n";
